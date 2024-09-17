@@ -12,9 +12,10 @@ type Store interface {
 	CreateShortURL(shortURL *models.ShortURL) error
 	GetOriginalURL(shortURL string) (string, error)
 	IncrementAccessCount(shortURL string) error
-	UpdateShortURL(oldShortURL string, updatedURL models.ShortURL) error
+	UpdateShortURL(shortURL string, newOriginalURL string) error
 	DeleteShortURL(shortURL string) error
 	GetShortURLStats(shortURL string) (*models.ShortURL, error)
+	GetAllShortURLs() ([]models.ShortURL, error)
 }
 
 type Storage struct {
@@ -46,7 +47,6 @@ func (s *Storage) CreateShortURL(shortURL *models.ShortURL) error {
 
 	return nil
 }
-
 func (s *Storage) GetOriginalURL(shortURL string) (string, error) {
 	var originalURL string
 	query := `SELECT original_url FROM urls WHERE short_url = $1`
@@ -56,29 +56,25 @@ func (s *Storage) GetOriginalURL(shortURL string) (string, error) {
 	}
 	return originalURL, nil
 }
-
 func (s *Storage) IncrementAccessCount(shortURL string) error {
 	query := `UPDATE urls SET access_count = access_count + 1, updated_at = NOW() WHERE short_url = $1`
 	_, err := s.pool.Exec(context.Background(), query, shortURL)
 	return err
 }
-
-func (s *Storage) UpdateShortURL(oldShortURL string, updatedURL models.ShortURL) error {
+func (s *Storage) UpdateShortURL(shortURL string, newOriginalURL string) error {
 	query := `
 		UPDATE urls
-		SET original_url = $1, short_url = $2, updated_at = NOW()
-		WHERE short_url = $3
+		SET original_url = $1, updated_at = NOW()
+		WHERE short_url = $2
 	`
-	_, err := s.pool.Exec(context.Background(), query, updatedURL.OriginalURL, updatedURL.ShortURL, oldShortURL)
+	_, err := s.pool.Exec(context.Background(), query, newOriginalURL, shortURL)
 	return err
 }
-
 func (s *Storage) DeleteShortURL(shortURL string) error {
 	query := `DELETE FROM urls WHERE short_url = $1`
 	_, err := s.pool.Exec(context.Background(), query, shortURL)
 	return err
 }
-
 func (s *Storage) GetShortURLStats(shortURL string) (*models.ShortURL, error) {
 	var url models.ShortURL
 	query := `SELECT original_url, short_url, access_count, created_at, updated_at FROM urls WHERE short_url = $1`
@@ -87,4 +83,30 @@ func (s *Storage) GetShortURLStats(shortURL string) (*models.ShortURL, error) {
 		return nil, err
 	}
 	return &url, nil
+}
+func (s *Storage) GetAllShortURLs() ([]models.ShortURL, error) {
+	query := `
+		SELECT short_url, original_url, access_count, created_at, updated_at
+		FROM urls
+	`
+	rows, err := s.pool.Query(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var urls []models.ShortURL
+	for rows.Next() {
+		var url models.ShortURL
+		if err := rows.Scan(&url.ShortURL, &url.OriginalURL, &url.AccessCount, &url.CreatedAt, &url.UpdatedAt); err != nil {
+			return nil, err
+		}
+		urls = append(urls, url)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return urls, nil
 }

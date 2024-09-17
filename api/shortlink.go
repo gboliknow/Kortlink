@@ -23,6 +23,7 @@ func (s *ShortlinkService) ShortlinkRoutes(r *gin.RouterGroup) {
 	r.PUT("/:shortURL", s.handleUpdateShortlink)
 	r.DELETE("/:shortURL", s.handleDeleteShortlink)
 	r.GET("/:shortURL/stats", s.handleGetStats)
+	r.GET("/shortlinks", s.handleGetAllShortlinks)
 }
 
 func (s *ShortlinkService) handleCreateShortlink(c *gin.Context) {
@@ -82,6 +83,11 @@ func (s *ShortlinkService) handleUpdateShortlink(c *gin.Context) {
 		utility.WriteJSON(c.Writer, http.StatusBadRequest, "Short URL is required", nil)
 		return
 	}
+	_, err := s.store.GetOriginalURL(shortURL)
+	if err != nil {
+		utility.WriteJSON(c.Writer, http.StatusNotFound, "Short URL not found", nil)
+		return
+	}
 
 	var payload models.ShortURL
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -89,7 +95,12 @@ func (s *ShortlinkService) handleUpdateShortlink(c *gin.Context) {
 		return
 	}
 
-	if err := s.store.UpdateShortURL(shortURL, payload); err != nil {
+	if err := utility.ValidateUrlRequest(payload.OriginalURL); err != nil {
+		utility.WriteJSON(c.Writer, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	if err := s.store.UpdateShortURL(shortURL, payload.OriginalURL); err != nil {
 		utility.WriteJSON(c.Writer, http.StatusInternalServerError, "Failed to update short URL", nil)
 		return
 	}
@@ -119,6 +130,11 @@ func (s *ShortlinkService) handleDeleteShortlink(c *gin.Context) {
 		utility.WriteJSON(c.Writer, http.StatusBadRequest, "Short URL is required", nil)
 		return
 	}
+	_, err := s.store.GetOriginalURL(shortURL)
+	if err != nil {
+		utility.WriteJSON(c.Writer, http.StatusNotFound, "Short URL not found", nil)
+		return
+	}
 
 	if err := s.store.DeleteShortURL(shortURL); err != nil {
 		utility.WriteJSON(c.Writer, http.StatusInternalServerError, "Failed to delete short URL", nil)
@@ -126,4 +142,14 @@ func (s *ShortlinkService) handleDeleteShortlink(c *gin.Context) {
 	}
 
 	utility.WriteJSON(c.Writer, http.StatusOK, "Short URL deleted successfully", nil)
+}
+
+func (s *ShortlinkService) handleGetAllShortlinks(c *gin.Context) {
+	urls, err := s.store.GetAllShortURLs()
+	if err != nil {
+		utility.WriteJSON(c.Writer, http.StatusInternalServerError, "Failed to fetch URLs", nil)
+		return
+	}
+
+	utility.WriteJSON(c.Writer, http.StatusOK, "Successfully fetched URLs", urls)
 }
