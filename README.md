@@ -147,3 +147,4 @@ The API uses PostgreSQL as the database. The `pgx` library is used for database 
 ```bash
 docker run -d -p 5432:5432 --name kortlink-db -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=kortlink postgres:latest
 ```
+https://roadmap.sh/projects/url-shortening-service
