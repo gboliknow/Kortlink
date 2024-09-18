@@ -1,6 +1,7 @@
 package api
 
 import (
+	"kortlink/internal/cache"
 	"net/http"
 	"os"
 
@@ -12,11 +13,13 @@ type APIServer struct {
 	addr   string
 	store  Store
 	logger zerolog.Logger
+	cache  *cache.RedisCache
 }
 
 func NewAPIServer(addr string, store Store) *APIServer {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
-	return &APIServer{addr: addr, store: store, logger: logger}
+	redisCache := cache.NewRedisCache("localhost:6379", "", 0)
+	return &APIServer{addr: addr, store: store, logger: logger, cache: redisCache}
 }
 
 func (s *APIServer) Serve() {
@@ -24,7 +27,7 @@ func (s *APIServer) Serve() {
 	apiV1 := router.Group("/api/v1")
 
 	//registering the routes
-	shortlinkService := NewShortlinkService(s.store)
+	shortlinkService := NewShortlinkService(s.store, s.cache)
 	shortlinkService.ShortlinkRoutes(apiV1)
 
 	s.logger.Info().Str("addr", s.addr).Msg("Starting API server")
