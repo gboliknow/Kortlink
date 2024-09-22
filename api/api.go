@@ -5,10 +5,19 @@ import (
 	"net/http"
 	"os"
 
+	_ "kortlink/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
+// @title Kortlink API
+// @version 1.0
+// @description This is the API documentation for Kortlink.
+// @BasePath /api/v1
+//@host kortlink-production.up.railway.app
 type APIServer struct {
 	addr   string
 	store  Store
@@ -25,6 +34,8 @@ func NewAPIServer(addr string, store Store) *APIServer {
 func (s *APIServer) Serve() {
 	router := gin.Default()
 	apiV1 := router.Group("/api/v1")
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//registering the routes
 	shortlinkService := NewShortlinkService(s.store, s.cache)
