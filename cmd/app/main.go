@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"kortlink/api"
 
+	"kortlink/internal/config"
 	"kortlink/internal/database"
 	"os"
 
@@ -16,13 +18,13 @@ func main() {
 
 	log.Info().Msg("Starting Kortlink project")
 	dsn := os.Getenv("DB_URL")
-	// connStr := fmt.Sprintf(dsn,
-	// 	// config.Envs.DBUser,
-	// 	// config.Envs.DBPassword,
-	// 	// config.Envs.DBAddress,
-	// 	// config.Envs.DBName,
-	// )
-	sqlStorage, err := database.NewPostgresStorage(dsn)
+	connStr := fmt.Sprintf(dsn,
+		config.Envs.DBUser,
+		config.Envs.DBPassword,
+		config.Envs.DBAddress,
+		config.Envs.DBName,
+	)
+	sqlStorage, err := database.NewPostgresStorage(connStr)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to database")
 	}

@@ -31,7 +31,7 @@ func (s *PostgresStorage) Pool() *pgxpool.Pool {
 func (s *PostgresStorage) InitializeDatabase() error {
 	// Create the users table
 	if err := s.createUrlsTable(); err != nil {
-		log.Error().Err(err).Msg("Failed to create users table")
+		log.Error().Err(err).Msg("Failed to create urls table")
 		return err
 	}
 	log.Info().Msg("url table created successfully")

@@ -11,6 +11,10 @@ type ShortURL struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+type ShortURLPayload struct {
+	OriginalURL string `json:"original_url" binding:"required"`
+}
+
 type Response struct {
 	StatusCode int         `json:"statusCode"`
 	Message    string      `json:"message"`
