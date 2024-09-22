@@ -30,10 +30,21 @@ func (s *ShortlinkService) ShortlinkRoutes(r *gin.RouterGroup) {
 	r.GET("/debug/healthCheck", s.handleHealthCheck)
 }
 
+
 func (s *ShortlinkService) handleHealthCheck(c *gin.Context) {
 	utility.WriteJSON(c.Writer, http.StatusOK, "Health check successfully", nil)
 }
 
+// @Summary      Create Shortlink
+// @Description  Create a new short URL
+// @Tags         shortlinks
+// @Accept       json
+// @Produce      json
+// @Param        body  body   models.ShortURLPayload  true  "Original URL payload"
+// @Success      201   {object} models.ShortURL
+// @Failure      400   {object} models.Response
+// @Failure      500   {object} models.Response
+// @Router       /api/v1/shortlink [post]
 func (s *ShortlinkService) handleCreateShortlink(c *gin.Context) {
 	var payload models.ShortURL
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -63,6 +74,15 @@ func (s *ShortlinkService) handleCreateShortlink(c *gin.Context) {
 	utility.WriteJSON(c.Writer, http.StatusCreated, "Short link created successfully", shortLink)
 }
 
+// @Summary      Redirect to the original URL
+// @Description  Redirects to the original URL based on the provided short URL
+// @Tags         shortlinks
+// @Param        shortURL   path      string  true  "Short URL"
+// @Success      302        {string}  string  "Redirected to the original URL"
+// @Failure      400        {string}  string  "Short URL is required"
+// @Failure      404        {string}  string  "Short URL not found"
+// @Failure      500        {string}  string  "Failed to update access count"
+// @Router       /api/v1/{shortURL} [get]
 func (s *ShortlinkService) handleRedirect(c *gin.Context) {
 	shortURL := c.Param("shortURL")
 	if shortURL == "" {
@@ -97,6 +117,18 @@ func (s *ShortlinkService) handleRedirect(c *gin.Context) {
 	c.Redirect(http.StatusFound, url)
 }
 
+// @Summary      Update a short URL
+// @Description  Update the original URL for a given short URL
+// @Tags         shortlinks
+// @Accept       json
+// @Produce      json
+// @Param        shortURL   path      string      true  "Short URL"
+// @Param        body       body      models.ShortURL  true  "New original URL"
+// @Success      200        {string}  string      "Short URL updated successfully"
+// @Failure      400        {string}  string      "Invalid request payload or Short URL is required"
+// @Failure      404        {string}  string      "Short URL not found"
+// @Failure      500        {string}  string      "Failed to update short URL"
+// @Router       /api/v1/{shortURL} [put]
 func (s *ShortlinkService) handleUpdateShortlink(c *gin.Context) {
 	shortURL := c.Param("shortURL")
 	if shortURL == "" {
@@ -128,6 +160,14 @@ func (s *ShortlinkService) handleUpdateShortlink(c *gin.Context) {
 	utility.WriteJSON(c.Writer, http.StatusOK, "Short URL updated successfully", nil)
 }
 
+// @Summary      Get short URL statistics
+// @Description  Fetches the statistics (e.g., access count) for a given short URL
+// @Tags         shortlinks
+// @Param        shortURL   path      string  true  "Short URL"
+// @Success      200        {object}  map[string]interface{}  "Statistics fetched successfully"
+// @Failure      400        {string}  string  "Short URL is required"
+// @Failure      404        {string}  string  "Short URL not found"
+// @Router       /api/v1/{shortURL}/stats [get]
 func (s *ShortlinkService) handleGetStats(c *gin.Context) {
 	shortURL := c.Param("shortURL")
 	if shortURL == "" {
@@ -144,6 +184,15 @@ func (s *ShortlinkService) handleGetStats(c *gin.Context) {
 	utility.WriteJSON(c.Writer, http.StatusOK, "Statistics fetched successfully", stats)
 }
 
+// @Summary      Delete a short URL
+// @Description  Deletes a given short URL and its related data
+// @Tags         shortlinks
+// @Param        shortURL   path      string  true  "Short URL"
+// @Success      200        {string}  string  "Short URL deleted successfully"
+// @Failure      400        {string}  string  "Short URL is required"
+// @Failure      404        {string}  string  "Short URL not found"
+// @Failure      500        {string}  string  "Failed to delete short URL"
+// @Router      /api/v1/{shortURL} [delete]
 func (s *ShortlinkService) handleDeleteShortlink(c *gin.Context) {
 	shortURL := c.Param("shortURL")
 	if shortURL == "" {
@@ -164,6 +213,12 @@ func (s *ShortlinkService) handleDeleteShortlink(c *gin.Context) {
 	utility.WriteJSON(c.Writer, http.StatusOK, "Short URL deleted successfully", nil)
 }
 
+// @Summary      Get all short URLs
+// @Description  Fetches a list of all short URLs stored in the system
+// @Tags         shortlinks
+// @Success      200        {array}   models.ShortURL  "Successfully fetched URLs"
+// @Failure      500        {string}  string  "Failed to fetch URLs"
+// @Router       /api/v1/shortlinks [get]
 func (s *ShortlinkService) handleGetAllShortlinks(c *gin.Context) {
 	urls, err := s.store.GetAllShortURLs()
 	if err != nil {

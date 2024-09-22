@@ -1,0 +1,204 @@
+definitions:
+  models.Response:
+    properties:
+      data:
+        description: Data is omitted if nil or empty
+      message:
+        type: string
+      statusCode:
+        type: integer
+    type: object
+  models.ShortURL:
+    properties:
+      access_count:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: string
+      original_url:
+        type: string
+      short_url:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.ShortURLPayload:
+    properties:
+      original_url:
+        type: string
+    required:
+    - original_url
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/{shortURL}:
+    delete:
+      description: Deletes a given short URL and its related data
+      parameters:
+      - description: Short URL
+        in: path
+        name: shortURL
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Short URL deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Short URL is required
+          schema:
+            type: string
+        "404":
+          description: Short URL not found
+          schema:
+            type: string
+        "500":
+          description: Failed to delete short URL
+          schema:
+            type: string
+      summary: Delete a short URL
+      tags:
+      - shortlinks
+    get:
+      description: Redirects to the original URL based on the provided short URL
+      parameters:
+      - description: Short URL
+        in: path
+        name: shortURL
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Redirected to the original URL
+          schema:
+            type: string
+        "400":
+          description: Short URL is required
+          schema:
+            type: string
+        "404":
+          description: Short URL not found
+          schema:
+            type: string
+        "500":
+          description: Failed to update access count
+          schema:
+            type: string
+      summary: Redirect to the original URL
+      tags:
+      - shortlinks
+    put:
+      consumes:
+      - application/json
+      description: Update the original URL for a given short URL
+      parameters:
+      - description: Short URL
+        in: path
+        name: shortURL
+        required: true
+        type: string
+      - description: New original URL
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.ShortURL'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Short URL updated successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request payload or Short URL is required
+          schema:
+            type: string
+        "404":
+          description: Short URL not found
+          schema:
+            type: string
+        "500":
+          description: Failed to update short URL
+          schema:
+            type: string
+      summary: Update a short URL
+      tags:
+      - shortlinks
+  /api/v1/{shortURL}/stats:
+    get:
+      description: Fetches the statistics (e.g., access count) for a given short URL
+      parameters:
+      - description: Short URL
+        in: path
+        name: shortURL
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Statistics fetched successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Short URL is required
+          schema:
+            type: string
+        "404":
+          description: Short URL not found
+          schema:
+            type: string
+      summary: Get short URL statistics
+      tags:
+      - shortlinks
+  /api/v1/shortlink:
+    post:
+      consumes:
+      - application/json
+      description: Create a new short URL
+      parameters:
+      - description: Original URL payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.ShortURLPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ShortURL'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Create Shortlink
+      tags:
+      - shortlinks
+  /api/v1/shortlinks:
+    get:
+      description: Fetches a list of all short URLs stored in the system
+      responses:
+        "200":
+          description: Successfully fetched URLs
+          schema:
+            items:
+              $ref: '#/definitions/models.ShortURL'
+            type: array
+        "500":
+          description: Failed to fetch URLs
+          schema:
+            type: string
+      summary: Get all short URLs
+      tags:
+      - shortlinks
+swagger: "2.0"
