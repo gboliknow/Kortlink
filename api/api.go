@@ -18,7 +18,8 @@ type APIServer struct {
 
 func NewAPIServer(addr string, store Store) *APIServer {
 	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
-	redisCache := cache.NewRedisCache("localhost:6379", "", 0)
+	pass := os.Getenv("Password")
+	redisCache := cache.NewRedisCache("localhost:6379", pass, 0)
 	return &APIServer{addr: addr, store: store, logger: logger, cache: redisCache}
 }
 
