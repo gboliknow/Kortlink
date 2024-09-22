@@ -17,6 +17,7 @@ import (
 // @version 1.0
 // @description This is the API documentation for Kortlink.
 // @BasePath /api/v1
+//@host kortlink-production.up.railway.app
 type APIServer struct {
 	addr   string
 	store  Store

@@ -15,16 +15,25 @@ import (
 func main() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	env := os.Getenv("ENVIRONMENT")
+	var connStr string
+	if env == "debug" {
+		log.Info().Msg("Starting Debug Kortlink project")
+		dsn := "postgresql://%s:%s@%s/%s?sslmode=disable"
+		connStr = fmt.Sprintf(dsn,
+			config.Envs.DBUser,
+			config.Envs.DBPassword,
+			config.Envs.DBAddress,
+			config.Envs.DBName,
+		)
+	} else {
+		log.Info().Msg("Starting Production Kortlink project")
+		connStr = os.Getenv("DB_URL")
+	}
 
-	log.Info().Msg("Starting Kortlink project")
-	dsn := os.Getenv("DB_URL")
-	connStr := fmt.Sprintf(dsn,
-		config.Envs.DBUser,
-		config.Envs.DBPassword,
-		config.Envs.DBAddress,
-		config.Envs.DBName,
-	)
+	// Attempt to connect to the database
 	sqlStorage, err := database.NewPostgresStorage(connStr)
+
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to database")
 	}
