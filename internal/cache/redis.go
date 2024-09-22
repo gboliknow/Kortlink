@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/redis/go-redis/v9" 
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 )
 
@@ -12,24 +12,16 @@ type RedisCache struct {
 	Client *redis.Client
 }
 
-
-func NewRedisCache(redisAddr string, redisPassword string, redisDB int) *RedisCache {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: redisPassword,
-		DB:       redisDB,
-	})
-
+func NewRedisCache() *RedisCache {
+	opt, _ := redis.ParseURL("rediss://default:AVPEAAIjcDEwMzE0ZGM5ZjkyNDE0MmI5YWQyOTdjZTFhNTFkNWYyNHAxMA@real-owl-21444.upstash.io:6379")
+	client := redis.NewClient(opt)
 	log.Info().
-		Str("redis_address", redisAddr).
-		Int("redis_db", redisDB).
 		Msg("Redis client initialized")
 
 	return &RedisCache{
-		Client: rdb,
+		Client: client,
 	}
 }
-
 
 func (r *RedisCache) Get(key string) (string, error) {
 	ctx := context.Background()
@@ -38,7 +30,7 @@ func (r *RedisCache) Get(key string) (string, error) {
 		log.Warn().
 			Str("key", key).
 			Msg("Cache miss")
-		return "", nil 
+		return "", nil
 	} else if err != nil {
 		log.Error().
 			Err(err).
@@ -51,7 +43,6 @@ func (r *RedisCache) Get(key string) (string, error) {
 		Msg("Cache hit")
 	return val, nil
 }
-
 
 func (r *RedisCache) Set(key string, value string, expiration time.Duration) error {
 	ctx := context.Background()
@@ -70,7 +61,6 @@ func (r *RedisCache) Set(key string, value string, expiration time.Duration) err
 	return nil
 }
 
-
 func (r *RedisCache) Delete(key string) error {
 	ctx := context.Background()
 	err := r.Client.Del(ctx, key).Err()
@@ -86,7 +76,6 @@ func (r *RedisCache) Delete(key string) error {
 		Msg("Cache deleted successfully")
 	return nil
 }
-
 
 func (r *RedisCache) CacheStats(key string, value string, expiration time.Duration) error {
 	ctx := context.Background()
@@ -104,7 +93,6 @@ func (r *RedisCache) CacheStats(key string, value string, expiration time.Durati
 		Msg("Stats cached successfully")
 	return nil
 }
-
 
 func (r *RedisCache) GetCachedStats(key string) (string, error) {
 	ctx := context.Background()

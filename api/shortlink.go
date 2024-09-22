@@ -27,6 +27,11 @@ func (s *ShortlinkService) ShortlinkRoutes(r *gin.RouterGroup) {
 	r.DELETE("/:shortURL", s.handleDeleteShortlink)
 	r.GET("/:shortURL/stats", s.handleGetStats)
 	r.GET("/shortlinks", s.handleGetAllShortlinks)
+	r.GET("/debug/healthCheck", s.handleHealthCheck)
+}
+
+func (s *ShortlinkService) handleHealthCheck(c *gin.Context) {
+	utility.WriteJSON(c.Writer, http.StatusOK, "Health check successfully", nil)
 }
 
 func (s *ShortlinkService) handleCreateShortlink(c *gin.Context) {
@@ -67,6 +72,11 @@ func (s *ShortlinkService) handleRedirect(c *gin.Context) {
 
 	originalURL, err := s.cache.Get(shortURL)
 	if err == nil && originalURL != "" {
+		err = s.store.IncrementAccessCount(shortURL)
+		if err != nil {
+			utility.WriteJSON(c.Writer, http.StatusInternalServerError, "Failed to update access count", nil)
+			return
+		}
 		c.Redirect(http.StatusFound, originalURL)
 		return
 	}
