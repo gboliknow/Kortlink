@@ -28,8 +28,8 @@ func (s *ShortlinkService) ShortlinkRoutes(r *gin.RouterGroup) {
 	r.GET("/:shortURL/stats", s.handleGetStats)
 	r.GET("/shortlinks", s.handleGetAllShortlinks)
 	r.GET("/debug/healthCheck", s.handleHealthCheck)
+	r.GET("/graphql", s.graphqlShortlinks)
 }
-
 
 func (s *ShortlinkService) handleHealthCheck(c *gin.Context) {
 	utility.WriteJSON(c.Writer, http.StatusOK, "Health check successfully", nil)
@@ -193,6 +193,7 @@ func (s *ShortlinkService) handleGetStats(c *gin.Context) {
 // @Failure      404        {string}  string  "Short URL not found"
 // @Failure      500        {string}  string  "Failed to delete short URL"
 // @Router      /api/v1/{shortURL} [delete]
+
 func (s *ShortlinkService) handleDeleteShortlink(c *gin.Context) {
 	shortURL := c.Param("shortURL")
 	if shortURL == "" {
