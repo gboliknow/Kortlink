@@ -8,6 +8,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+
+type Cache interface {
+    Set(key, value string, duration time.Duration) error
+    Get(key string) (string, error)
+    Delete(key string) error
+}
+
+var _ Cache = (*RedisCache)(nil)
 type RedisCache struct {
 	Client *redis.Client
 }
