@@ -13,10 +13,10 @@ import (
 
 type ShortlinkService struct {
 	store Store
-	cache *cache.RedisCache
+	cache   cache.Cache
 }
 
-func NewShortlinkService(s Store, c *cache.RedisCache) *ShortlinkService {
+func NewShortlinkService(s Store,  c cache.Cache) *ShortlinkService {
 	return &ShortlinkService{store: s, cache: c}
 }
 
