@@ -107,7 +107,7 @@ func (s *ShortlinkService) handleRedirect(c *gin.Context) {
 		return
 	}
 
-	_ = s.cache.Set(shortURL, originalURL, 24*time.Hour)
+	_ = s.cache.Set(shortURL, url, 24*time.Hour)
 	err = s.store.IncrementAccessCount(shortURL)
 	if err != nil {
 		utility.WriteJSON(c.Writer, http.StatusInternalServerError, "Failed to update access count", nil)
